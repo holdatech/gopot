@@ -11,10 +11,6 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-func init() {
-	json.RegisterTypeEncoderFunc("string", encodeString)
-}
-
 // AsciiString can be used to escape the utf-8 charracters in the json output
 type AsciiString string
 

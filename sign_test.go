@@ -79,7 +79,7 @@ func TestSignature(t *testing.T) {
 
 	signature, _ := CreateSignature(test, []byte(secret))
 
-	if signature != "5t1XQofwg2Uc6j7Lnh, stringIsEmptyNz0gvFL0AgJj0sGyvQHyKCXWM=" {
+	if signature != "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=" {
 		t.Error("Signature doesn't match")
 	}
 
