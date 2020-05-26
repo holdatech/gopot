@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"log"
 	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
@@ -22,6 +23,8 @@ func (s AsciiString) MarshalJSON() ([]byte, error) {
 // CreateSignature creates a pot signature with the given secret
 func CreateSignature(d interface{}, secret []byte) (string, error) {
 	jdata, err := Marshal(d)
+
+	log.Printf("payload to be signed: %s", jdata)
 
 	// Sign the payload
 	hash := hmac.New(sha256.New, secret)
