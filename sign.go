@@ -12,18 +12,21 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json jsoniter.API
 
 func init() {
 	jsoniter.RegisterTypeEncoderFunc("string", asciiEncode, asciiIsEmpty)
+	config := jsoniter.Config{
+		SortMapKeys:            true,
+		ValidateJsonRawMessage: true,
+	}
+	json = config.Froze()
 }
 
 func asciiEncode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
 	str := *(*string)(ptr)
 	fmt.Printf("TEST STRING %s", str)
-	stream.WriteRaw(`"`)
 	stream.WriteRaw(strconv.QuoteToASCII(str))
-	stream.WriteRaw(`"`)
 }
 
 func asciiIsEmpty(ptr unsafe.Pointer) bool {
