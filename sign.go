@@ -4,8 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
-	"log"
 	"strconv"
 	"unsafe"
 
@@ -25,7 +23,6 @@ func init() {
 
 func asciiEncode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
 	str := *(*string)(ptr)
-	fmt.Printf("TEST STRING %s", str)
 	stream.WriteRaw(strconv.QuoteToASCII(str))
 }
 
@@ -47,8 +44,6 @@ func (s AsciiString) MarshalJSON() ([]byte, error) {
 // CreateSignature creates a pot signature with the given secret
 func CreateSignature(d interface{}, secret []byte) (string, error) {
 	jdata, err := Marshal(d)
-
-	log.Printf("payload to be signed: %s", jdata)
 
 	// Sign the payload
 	hash := hmac.New(sha256.New, secret)
