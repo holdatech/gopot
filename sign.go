@@ -4,13 +4,34 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"strconv"
+	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+func init() {
+	jsoniter.RegisterTypeEncoderFunc("string", asciiEncode, asciiIsEmpty)
+}
+
+func asciiEncode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
+	str := *(*string)(ptr)
+	fmt.Printf("TEST STRING %s", str)
+	stream.WriteRaw(`"`)
+	stream.WriteRaw(strconv.QuoteToASCII(str))
+	stream.WriteRaw(`"`)
+}
+
+func asciiIsEmpty(ptr unsafe.Pointer) bool {
+	if *(*string)(ptr) == "" {
+		return true
+	}
+	return false
+}
 
 // AsciiString can be used to escape the utf-8 charracters in the json output
 type AsciiString string

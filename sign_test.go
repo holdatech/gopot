@@ -28,9 +28,13 @@ func TestAddSpaces(t *testing.T) {
 
 func TestAsciiString(t *testing.T) {
 	cases := []struct {
-		in  AsciiString
+		in  string
 		out []byte
 	}{
+		{
+			in:  "hello",
+			out: []byte(`"hello"`),
+		},
 		{
 			in:  "hello & foo € bar",
 			out: []byte(`"hello & foo \u20ac bar"`),
@@ -46,7 +50,7 @@ func TestAsciiString(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		d, _ := c.in.MarshalJSON()
+		d, _ := json.Marshal(c.in)
 		if !bytes.Equal(d, c.out) {
 			t.Errorf("Encode ascii string to json: in: %s, out: %s, expected: %s", c.in, d, c.out)
 		}
