@@ -1,5 +1,5 @@
 [![GoDoc](https://godoc.org/github.com/holdatech/gopot/v2?status.svg)](https://pkg.go.dev/github.com/holdatech/gopot/v2)
-![Go](https://github.com/holdatech/gopot/workflows/Go/badge.svg)
+[![Go](https://github.com/holdatech/gopot/workflows/Go/badge.svg)](https://github.com/holdatech/gopot/actions)
 
 # gopot
 Platform of Trust utility functions for go.
