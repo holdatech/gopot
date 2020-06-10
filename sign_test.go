@@ -32,6 +32,10 @@ func TestAsciiString(t *testing.T) {
 		out []byte
 	}{
 		{
+			in:  "",
+			out: []byte(`""`),
+		},
+		{
 			in:  "hello",
 			out: []byte(`"hello"`),
 		},
@@ -52,21 +56,42 @@ func TestAsciiString(t *testing.T) {
 	for _, c := range cases {
 		d, _ := json.Marshal(c.in)
 		if !bytes.Equal(d, c.out) {
-			t.Errorf("Encode ascii string to json: in: %s, out: %s, expected: %s", c.in, d, c.out)
+			t.Errorf("Encode ascii string to json: in: `%s`, out: `%s`, expected: `%s`", c.in, d, c.out)
 		}
+	}
+}
+
+func TestNilString(t *testing.T) {
+	type testData struct {
+		Foo   string  `json:"foo"`
+		Hello string  `json:"hello,omitempty"`
+		Nil   *string `json:"nil"`
+		World string  `json:"world,omitempty"`
+	}
+
+	d, _ := Marshal(&testData{
+		Foo:   "bar",
+		Hello: "",
+		World: "world",
+	})
+
+	expected := []byte(`{"foo": "bar","nil": null,"world": "world"}`)
+
+	if !bytes.Equal(d, expected) {
+		t.Errorf("Encode ascii string to json: out: `%s`, expected: `%s`", d, expected)
 	}
 }
 
 func TestSignature(t *testing.T) {
 	type parameters struct {
-		BusinessID AsciiString `json:"businessId"`
-		Test       AsciiString `json:"test"`
+		BusinessID string `json:"businessId"`
+		Test       string `json:"test"`
 	}
 
 	type testData struct {
-		Parameters  parameters  `json:"parameters"`
-		ProductCode AsciiString `json:"productCode"`
-		Timestamp   time.Time   `json:"timestamp"`
+		Parameters  parameters `json:"parameters"`
+		ProductCode string     `json:"productCode"`
+		Timestamp   time.Time  `json:"timestamp"`
 	}
 
 	var secret = "P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0"
