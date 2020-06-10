@@ -59,14 +59,14 @@ func TestAsciiString(t *testing.T) {
 
 func TestSignature(t *testing.T) {
 	type parameters struct {
-		BusinessID AsciiString `json:"businessId"`
-		Test       AsciiString `json:"test"`
+		BusinessID string `json:"businessId"`
+		Test       string `json:"test"`
 	}
 
 	type testData struct {
-		Parameters  parameters  `json:"parameters"`
-		ProductCode AsciiString `json:"productCode"`
-		Timestamp   time.Time   `json:"timestamp"`
+		Parameters  parameters `json:"parameters"`
+		ProductCode string     `json:"productCode"`
+		Timestamp   time.Time  `json:"timestamp"`
 	}
 
 	var secret = "P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0"
