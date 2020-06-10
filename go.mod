@@ -1,4 +1,4 @@
-module github.com/holdatech/gopot
+module github.com/holdatech/gopot/v2
 
 go 1.14
 
