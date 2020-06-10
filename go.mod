@@ -1,4 +1,4 @@
-module git.holda.io/platform-of-trust/gopot
+module github.com/holdatech/gopot
 
 go 1.14
 
