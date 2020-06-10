@@ -32,6 +32,10 @@ func TestAsciiString(t *testing.T) {
 		out []byte
 	}{
 		{
+			in:  "",
+			out: []byte(`""`),
+		},
+		{
 			in:  "hello",
 			out: []byte(`"hello"`),
 		},
@@ -52,8 +56,29 @@ func TestAsciiString(t *testing.T) {
 	for _, c := range cases {
 		d, _ := json.Marshal(c.in)
 		if !bytes.Equal(d, c.out) {
-			t.Errorf("Encode ascii string to json: in: %s, out: %s, expected: %s", c.in, d, c.out)
+			t.Errorf("Encode ascii string to json: in: `%s`, out: `%s`, expected: `%s`", c.in, d, c.out)
 		}
+	}
+}
+
+func TestNilString(t *testing.T) {
+	type testData struct {
+		Foo   string  `json:"foo"`
+		Hello string  `json:"hello,omitempty"`
+		Nil   *string `json:"nil"`
+		World string  `json:"world,omitempty"`
+	}
+
+	d, _ := Marshal(&testData{
+		Foo:   "bar",
+		Hello: "",
+		World: "world",
+	})
+
+	expected := []byte(`{"foo": "bar","nil": null,"world": "world"}`)
+
+	if !bytes.Equal(d, expected) {
+		t.Errorf("Encode ascii string to json: out: `%s`, expected: `%s`", d, expected)
 	}
 }
 
