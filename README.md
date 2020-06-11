@@ -5,6 +5,12 @@
 # gopot
 Platform of Trust utility functions for go.
 
+## Getting the library
+
+```
+go get -u github.com/holdatech/gopot/v2
+```
+
 ## Usage
 
 ```go
