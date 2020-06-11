@@ -14,11 +14,11 @@ var json jsoniter.API
 
 func init() {
 	jsoniter.RegisterTypeEncoderFunc("string", asciiEncode, asciiIsEmpty)
-	conf := jsoniter.Config{
+	config := jsoniter.Config{
 		SortMapKeys:            true,
 		ValidateJsonRawMessage: true,
 	}
-	json = conf.Froze()
+	json = config.Froze()
 }
 
 func asciiEncode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
