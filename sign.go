@@ -13,11 +13,14 @@ import (
 var json jsoniter.API
 
 func init() {
+	// Initialize the jsoniter configuration with the custom ascii escape encoder
 	jsoniter.RegisterTypeEncoderFunc("string", asciiEncode, asciiIsEmpty)
 	config := jsoniter.Config{
 		SortMapKeys:            true,
 		ValidateJsonRawMessage: true,
 	}
+
+	// Freeze the jsoniter API
 	json = config.Froze()
 }
 
