@@ -1,6 +1,7 @@
 package gopot
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -39,6 +40,10 @@ func asciiIsEmpty(ptr unsafe.Pointer) bool {
 // CreateSignature creates a pot signature with the given secret
 func CreateSignature(d interface{}, secret []byte) (string, error) {
 	jdata, err := Marshal(d)
+
+	if bytes.Equal(secret, nil) {
+		return "", ErrNoSecret
+	}
 
 	// Sign the payload
 	hash := hmac.New(sha256.New, secret)

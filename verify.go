@@ -2,13 +2,16 @@ package gopot
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
 )
 
 func VerifySignatureFromRequest(r *http.Request, secret []byte) error {
+	if r.Body == nil {
+		return ErrNoBody
+	}
+
 	var buf bytes.Buffer
 	tee := io.TeeReader(r.Body, &buf)
 
@@ -29,7 +32,7 @@ func VerifySignatureFromRequest(r *http.Request, secret []byte) error {
 	}
 
 	if headerSignature != signedBody {
-		return errors.New("Invalid signature")
+		return ErrInvalidSignature
 	}
 
 	r.Body = ioutil.NopCloser(&buf)
