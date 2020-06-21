@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+// VerifySignatureFromRequest can be used to verify the signature in the http request.
+// It signs the request body and compares it to the signature provided in the header
 func VerifySignatureFromRequest(r *http.Request, secret []byte) error {
 	if r.Body == nil {
 		return ErrNoBody
@@ -25,6 +27,10 @@ func VerifySignatureFromRequest(r *http.Request, secret []byte) error {
 	json.Unmarshal(body, &data)
 
 	headerSignature := r.Header.Get("X-Pot-Signature")
+
+	if headerSignature == "" {
+		return ErrNoSignature
+	}
 
 	signedBody, err := CreateSignature(data, secret)
 	if err != nil {

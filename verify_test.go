@@ -78,3 +78,15 @@ func TestVerifySignatureNoSecret(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestVerifySignatureNoSignature(t *testing.T) {
+	var secret = []byte("P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0")
+
+	req, _ := http.NewRequest("POST", "/fetch", nil)
+	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
+
+	err := VerifySignatureFromRequest(req, secret)
+	if err != nil && !errors.Is(err, ErrNoSignature) {
+		t.Error(err)
+	}
+}
