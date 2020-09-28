@@ -11,24 +11,22 @@ import (
 )
 
 func TestSignatureVerifierMiddleware(t *testing.T) {
-	var secret = []byte("P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0")
-
 	router := chi.NewRouter()
-	router.Use(SignatureVerifierMiddleware(secret))
+	router.Use(SignatureVerifierMiddleware(&secretKey.PublicKey))
 	router.Post("/fetch", func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		w.Write(body)
 	})
 
 	req, _ := http.NewRequest("POST", "/fetch", nil)
-	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=")
+	req.Header.Set("X-Pot-Signature", testSignature())
 	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
 
 	rr := httptest.NewRecorder()
 
 	router.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Wrong status")
+		t.Errorf("Wrong status: Wanted: %d, Got: %d", http.StatusOK, status)
 	}
 
 	requestBody, _ := ioutil.ReadAll(rr.Body)
@@ -39,10 +37,8 @@ func TestSignatureVerifierMiddleware(t *testing.T) {
 }
 
 func TestWrongStatusSignatureVerifierMiddleware(t *testing.T) {
-	var secret = []byte("P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0")
-
 	router := chi.NewRouter()
-	router.Use(SignatureVerifierMiddleware(secret))
+	router.Use(SignatureVerifierMiddleware(&secretKey.PublicKey))
 	router.Post("/fetch", func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		w.Write(body)

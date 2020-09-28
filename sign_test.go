@@ -94,8 +94,6 @@ func TestSignature(t *testing.T) {
 		Timestamp   time.Time  `json:"timestamp"`
 	}
 
-	var secret = "P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0"
-
 	ts, _ := time.Parse(time.RFC3339, "2020-05-19T14:31:24Z")
 	test := &testData{
 		Timestamp:   ts,
@@ -106,10 +104,11 @@ func TestSignature(t *testing.T) {
 		},
 	}
 
-	signature, _ := CreateSignature(test, []byte(secret))
+	signature, _ := CreateSignature(test, secretKey)
 
-	if signature != "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=" {
-		t.Error("Signature doesn't match")
+	err := VerifySignature(test, signature, &secretKey.PublicKey)
+	if err != nil {
+		t.Errorf("Signature doesn't match: %e", err)
 	}
 
 	t.Log(signature)

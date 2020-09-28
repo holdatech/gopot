@@ -2,11 +2,19 @@ package gopot
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
 	"errors"
 	"io/ioutil"
 	"net/http"
 	"testing"
 )
+
+type errReader int
+
+func (errReader) Read(p []byte) (n int, err error) {
+	return 0, errTestError
+}
 
 var requestTestBody = []byte(`
 {
@@ -19,16 +27,24 @@ var requestTestBody = []byte(`
 }
 `)
 
+var secretKey, _ = rsa.GenerateKey(rand.Reader, 4096)
 var errTestError = errors.New("test error")
 
-func TestVerifySignatureFromRequest(t *testing.T) {
-	var secret = []byte("P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0")
+func testSignature() string {
+	var data interface{}
 
+	json.Unmarshal(requestTestBody, &data)
+	signature, _ := CreateSignature(data, secretKey)
+
+	return signature
+}
+
+func TestVerifySignatureFromRequest(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/fetch", nil)
-	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=")
+	req.Header.Set("X-Pot-Signature", testSignature())
 	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
 
-	err := VerifySignatureFromRequest(req, secret)
+	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,31 +54,36 @@ func TestVerifySignatureFromRequest(t *testing.T) {
 	t.Logf("%s", body)
 }
 
-func TestVerifySignatureNoBody(t *testing.T) {
-	var secret = []byte("P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0")
+func TestVerifySignatureInvalidSignature(t *testing.T) {
+	req, _ := http.NewRequest("POST", "/fetch", nil)
+	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=")
+	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
 
+	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
+	if err != nil && !errors.Is(err, ErrInvalidSignature) {
+		t.Error(err)
+	}
+
+	body, _ := ioutil.ReadAll(req.Body)
+
+	t.Logf("%s", body)
+}
+
+func TestVerifySignatureNoBody(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/fetch", nil)
 	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=")
 
-	err := VerifySignatureFromRequest(req, secret)
+	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
 	if err != nil && !errors.Is(err, ErrNoBody) {
 		t.Error(err)
 	}
 }
 
-type errReader int
-
-func (errReader) Read(p []byte) (n int, err error) {
-	return 0, errTestError
-}
-
 func TestVerifySignatureErrBody(t *testing.T) {
-	var secret = []byte("P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0")
-
 	req, _ := http.NewRequest("POST", "/fetch", errReader(0))
-	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=")
+	req.Header.Set("X-Pot-Signature", testSignature())
 
-	err := VerifySignatureFromRequest(req, secret)
+	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
 	if err != nil && !errors.Is(err, errTestError) {
 		t.Error(err)
 	}
@@ -71,7 +92,7 @@ func TestVerifySignatureErrBody(t *testing.T) {
 func TestVerifySignatureNoSecret(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/fetch", nil)
 	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
-	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgyvQHyKCXWM=")
+	req.Header.Set("X-Pot-Signature", testSignature())
 
 	err := VerifySignatureFromRequest(req, nil)
 	if err != nil && !errors.Is(err, ErrNoSecret) {
@@ -80,12 +101,10 @@ func TestVerifySignatureNoSecret(t *testing.T) {
 }
 
 func TestVerifySignatureNoSignature(t *testing.T) {
-	var secret = []byte("P8qNkpXkfLe_OQa_2ydHRgzFR2_GuIoyUoMtf8zcLZ0")
-
 	req, _ := http.NewRequest("POST", "/fetch", nil)
 	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
 
-	err := VerifySignatureFromRequest(req, secret)
+	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
 	if err != nil && !errors.Is(err, ErrNoSignature) {
 		t.Error(err)
 	}

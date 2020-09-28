@@ -8,7 +8,7 @@ Platform of Trust utility functions for go.
 ## Getting the library
 
 ```
-go get -u github.com/holdatech/gopot/v2
+go get -u github.com/holdatech/gopot/v3
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/holdatech/gopot/v2"
+	"github.com/holdatech/gopot/v3"
 )
 
 func main() {

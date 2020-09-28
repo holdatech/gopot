@@ -1,8 +1,9 @@
 package gopot
 
 import (
-	"bytes"
-	"crypto/hmac"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"strconv"
@@ -37,19 +38,34 @@ func asciiIsEmpty(ptr unsafe.Pointer) bool {
 	return false
 }
 
-// CreateSignature creates a pot signature with the given secret
-func CreateSignature(d interface{}, secret []byte) (string, error) {
+// calculateHash returns a calculated hash from the provided data
+func calculateHash(d interface{}) (hash [32]byte, err error) {
 	jdata, err := Marshal(d)
+	if err != nil {
+		return
+	}
 
-	if bytes.Equal(secret, nil) {
+	hash = sha256.Sum256(jdata)
+	return
+}
+
+// CreateSignature creates a pot signature with the given secret
+func CreateSignature(d interface{}, key *rsa.PrivateKey) (string, error) {
+	if key == nil {
 		return "", ErrNoSecret
 	}
 
-	// Sign the payload
-	hash := hmac.New(sha256.New, secret)
-	hash.Write(jdata)
+	hash, err := calculateHash(d)
+	if err != nil {
+		return "", err
+	}
 
-	return base64.StdEncoding.EncodeToString(hash.Sum(nil)), err
+	signature, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, hash[:])
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(signature), err
 }
 
 // Marshal marshals json with the POT separators added.
