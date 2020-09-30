@@ -2,6 +2,7 @@ package gopot
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +13,7 @@ import (
 
 func TestSignatureVerifierMiddleware(t *testing.T) {
 	router := chi.NewRouter()
-	router.Use(SignatureVerifierMiddleware(&secretKey.PublicKey))
+	router.Use(SignatureVerifierMiddleware([]*rsa.PublicKey{&secretKey.PublicKey}))
 	router.Post("/fetch", func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		w.Write(body)
@@ -38,7 +39,7 @@ func TestSignatureVerifierMiddleware(t *testing.T) {
 
 func TestWrongStatusSignatureVerifierMiddleware(t *testing.T) {
 	router := chi.NewRouter()
-	router.Use(SignatureVerifierMiddleware(&secretKey.PublicKey))
+	router.Use(SignatureVerifierMiddleware([]*rsa.PublicKey{&secretKey.PublicKey}))
 	router.Post("/fetch", func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		w.Write(body)

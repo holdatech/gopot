@@ -39,12 +39,46 @@ func testSignature() string {
 	return signature
 }
 
+func TestVerifySignature(t *testing.T) {
+	var data interface{}
+	json.Unmarshal(requestTestBody, &data)
+	signature, _ := CreateSignature(data, secretKey)
+
+	err := VerifySignature(data, signature, []*rsa.PublicKey{&secretKey.PublicKey})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestVerifySignatureMultipeKeys(t *testing.T) {
+	var data interface{}
+	json.Unmarshal(requestTestBody, &data)
+	signature, _ := CreateSignature(data, secretKey)
+
+	secretKey2, _ := rsa.GenerateKey(rand.Reader, 4096)
+
+	err := VerifySignature(data, signature, []*rsa.PublicKey{&secretKey2.PublicKey, &secretKey.PublicKey})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func BenchmarkVerifySignature(b *testing.B) {
+	var data interface{}
+	json.Unmarshal(requestTestBody, &data)
+	signature, _ := CreateSignature(data, secretKey)
+
+	for i := 0; i < b.N; i++ {
+		VerifySignature(data, signature, []*rsa.PublicKey{&secretKey.PublicKey})
+	}
+}
+
 func TestVerifySignatureFromRequest(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/fetch", nil)
 	req.Header.Set("X-Pot-Signature", testSignature())
 	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
 
-	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
+	err := VerifySignatureFromRequest(req, []*rsa.PublicKey{&secretKey.PublicKey})
 	if err != nil {
 		t.Error(err)
 	}
@@ -59,7 +93,7 @@ func TestVerifySignatureInvalidSignature(t *testing.T) {
 	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=")
 	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
 
-	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
+	err := VerifySignatureFromRequest(req, []*rsa.PublicKey{&secretKey.PublicKey})
 	if err != nil && !errors.Is(err, ErrInvalidSignature) {
 		t.Error(err)
 	}
@@ -73,7 +107,7 @@ func TestVerifySignatureNoBody(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/fetch", nil)
 	req.Header.Set("X-Pot-Signature", "5t1XQofwg2Uc6j7LnhNz0gvFL0AgJj0sGyvQHyKCXWM=")
 
-	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
+	err := VerifySignatureFromRequest(req, []*rsa.PublicKey{&secretKey.PublicKey})
 	if err != nil && !errors.Is(err, ErrNoBody) {
 		t.Error(err)
 	}
@@ -83,7 +117,7 @@ func TestVerifySignatureErrBody(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/fetch", errReader(0))
 	req.Header.Set("X-Pot-Signature", testSignature())
 
-	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
+	err := VerifySignatureFromRequest(req, []*rsa.PublicKey{&secretKey.PublicKey})
 	if err != nil && !errors.Is(err, errTestError) {
 		t.Error(err)
 	}
@@ -104,7 +138,7 @@ func TestVerifySignatureNoSignature(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/fetch", nil)
 	req.Body = ioutil.NopCloser(bytes.NewReader(requestTestBody))
 
-	err := VerifySignatureFromRequest(req, &secretKey.PublicKey)
+	err := VerifySignatureFromRequest(req, []*rsa.PublicKey{&secretKey.PublicKey})
 	if err != nil && !errors.Is(err, ErrNoSignature) {
 		t.Error(err)
 	}

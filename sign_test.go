@@ -2,6 +2,7 @@ package gopot
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"testing"
 	"time"
 )
@@ -23,6 +24,89 @@ func TestAddSpaces(t *testing.T) {
 		if !bytes.Equal(d, c.out) {
 			t.Errorf("Failed to add spaces: in: %s, out: %s, expected: %s", c.in, d, c.out)
 		}
+	}
+}
+
+type marshalTest struct {
+	Foo   string       `json:"foo"`
+	Hello string       `json:"hello,omitempty"`
+	Nil   *string      `json:"nil"`
+	World string       `json:"world,omitempty"`
+	X     float32      `json:"x"`
+	Y     float32      `json:"y"`
+	Data  *marshalTest `json:"data,omitempty"`
+}
+
+var benchmarkMarshalTestData = marshalTest{
+	Foo:   "bar",
+	Hello: "baz",
+	World: "hello",
+	X:     1234123.12341234,
+	Y:     12323.12341234,
+}
+
+func BenchmarkMarshal(b *testing.B) {
+	data := &benchmarkMarshalTestData
+	dd1 := *data
+	dd2 := *data
+
+	data.Data = &dd1
+	data.Data.Data = &dd2
+
+	for i := 0; i < b.N; i++ {
+		Marshal(data)
+	}
+}
+
+func BenchmarkMarshalWithoutSpaces(b *testing.B) {
+	data := &benchmarkMarshalTestData
+
+	dd1 := *data
+	dd2 := *data
+
+	data.Data = &dd1
+	data.Data.Data = &dd2
+
+	for i := 0; i < b.N; i++ {
+		MarshalWithoutSpaces(data)
+	}
+}
+
+func BenchmarkCalculateHash(b *testing.B) {
+	type testData struct {
+		Foo   string  `json:"foo"`
+		Hello string  `json:"hello,omitempty"`
+		Nil   *string `json:"nil"`
+		World string  `json:"world,omitempty"`
+	}
+
+	data := &testData{
+		Foo:   "bar",
+		Hello: "baz",
+		World: "hello",
+	}
+
+	for i := 0; i < b.N; i++ {
+		calculateHash(data)
+	}
+}
+
+func BenchmarkCreateSignature(b *testing.B) {
+	type testData struct {
+		Foo   string  `json:"foo"`
+		Hello string  `json:"hello,omitempty"`
+		Nil   *string `json:"nil"`
+		World string  `json:"world,omitempty"`
+	}
+
+	data := &testData{
+		Foo:   "bar",
+		Hello: "baz",
+		World: "hello",
+	}
+
+	for i := 0; i < b.N; i++ {
+		CreateSignature(data, secretKey)
 	}
 }
 
@@ -106,7 +190,7 @@ func TestSignature(t *testing.T) {
 
 	signature, _ := CreateSignature(test, secretKey)
 
-	err := VerifySignature(test, signature, &secretKey.PublicKey)
+	err := VerifySignature(test, signature, []*rsa.PublicKey{&secretKey.PublicKey})
 	if err != nil {
 		t.Errorf("Signature doesn't match: %e", err)
 	}

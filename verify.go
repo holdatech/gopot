@@ -5,14 +5,13 @@ import (
 	"crypto"
 	"crypto/rsa"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 )
 
 // VerifySignature verifies the signature with the provided public key
-func VerifySignature(d interface{}, signature string, key *rsa.PublicKey) error {
+func VerifySignature(d interface{}, signature string, keys []*rsa.PublicKey) error {
 	hash, err := calculateHash(d)
 	if err != nil {
 		return err
@@ -23,9 +22,17 @@ func VerifySignature(d interface{}, signature string, key *rsa.PublicKey) error 
 		return err
 	}
 
-	err = rsa.VerifyPKCS1v15(key, crypto.SHA256, hash[:], sg)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrInvalidSignature, err)
+	valid := false
+	for _, key := range keys {
+		err = rsa.VerifyPKCS1v15(key, crypto.SHA256, hash[:], sg)
+		if err == nil {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		return ErrInvalidSignature
 	}
 
 	return nil
@@ -33,10 +40,11 @@ func VerifySignature(d interface{}, signature string, key *rsa.PublicKey) error 
 
 // VerifySignatureFromRequest can be used to verify the signature in the http request.
 // It signs the request body and compares it to the signature provided in the header
-func VerifySignatureFromRequest(r *http.Request, key *rsa.PublicKey) error {
-	if key == nil {
+func VerifySignatureFromRequest(r *http.Request, keys []*rsa.PublicKey) error {
+	if len(keys) == 0 {
 		return ErrNoSecret
 	}
+
 	if r.Body == nil {
 		return ErrNoBody
 	}
@@ -51,7 +59,10 @@ func VerifySignatureFromRequest(r *http.Request, key *rsa.PublicKey) error {
 
 	var data interface{}
 
-	json.Unmarshal(body, &data)
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return err
+	}
 
 	headerSignature := r.Header.Get("X-Pot-Signature")
 
@@ -59,7 +70,7 @@ func VerifySignatureFromRequest(r *http.Request, key *rsa.PublicKey) error {
 		return ErrNoSignature
 	}
 
-	err = VerifySignature(data, headerSignature, key)
+	err = VerifySignature(data, headerSignature, keys)
 	if err != nil {
 		return err
 	}

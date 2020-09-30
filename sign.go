@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"unsafe"
 
+	jsonstd "encoding/json"
+
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -72,6 +74,13 @@ func CreateSignature(d interface{}, key *rsa.PrivateKey) (string, error) {
 func Marshal(d interface{}) ([]byte, error) {
 	jdata, err := json.Marshal(d)
 	jdata = JSONAddSpaces(jdata)
+
+	return jdata, err
+}
+
+// MarshalWithoutSpaces marshals json without the POT separators added.
+func MarshalWithoutSpaces(d interface{}) ([]byte, error) {
+	jdata, err := jsonstd.Marshal(d)
 
 	return jdata, err
 }
