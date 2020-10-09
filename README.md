@@ -1,4 +1,4 @@
-[![GoDoc](https://godoc.org/github.com/holdatech/gopot/v2?status.svg)](https://pkg.go.dev/github.com/holdatech/gopot/v2)
+[![GoDoc](https://godoc.org/github.com/holdatech/gopot/v2?status.svg)](https://pkg.go.dev/github.com/holdatech/gopot/v4)
 [![Go](https://github.com/holdatech/gopot/workflows/Go/badge.svg)](https://github.com/holdatech/gopot/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/holdatech/gopot)](https://goreportcard.com/report/github.com/holdatech/gopot)
 
@@ -8,7 +8,7 @@ Platform of Trust utility functions for go.
 ## Getting the library
 
 ```
-go get -u github.com/holdatech/gopot/v3
+go get -u github.com/holdatech/gopot/v4
 ```
 
 ## Usage
@@ -19,11 +19,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/holdatech/gopot/v3"
+	"github.com/holdatech/gopot/v4"
 )
 
 func main() {
-	secret := []byte("secret123")
+	var secretKey, _ = rsa.GenerateKey(rand.Reader, 4096)
 
 	payload := struct {
 		Hello string `json:"hello"`
@@ -31,7 +31,7 @@ func main() {
 		Hello: "World",
 	}
 
-	signature, err := gopot.CreateSignature(payload, secret)
+	signature, err := gopot.CreateSignature(payload, secretKey)
 	if err != nil {
 		panic(err)
 	}
